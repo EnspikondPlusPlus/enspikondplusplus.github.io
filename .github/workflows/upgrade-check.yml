@@ -5,33 +5,25 @@ on:
     branches:
       - master
       - main
-      - v1.0-dev
     paths:
       - "_config.yml"
       - "_data/**"
       - "_pages/**"
-      - "_posts/**"
-      - "_projects/**"
       - "assets/**"
       - "Gemfile"
       - "Gemfile.lock"
-      - "test/integration_upgrade_cli.sh"
       - ".github/workflows/upgrade-check.yml"
   pull_request:
     branches:
       - master
       - main
-      - v1.0-dev
     paths:
       - "_config.yml"
       - "_data/**"
       - "_pages/**"
-      - "_posts/**"
-      - "_projects/**"
       - "assets/**"
       - "Gemfile"
       - "Gemfile.lock"
-      - "test/integration_upgrade_cli.sh"
       - ".github/workflows/upgrade-check.yml"
 
 jobs:

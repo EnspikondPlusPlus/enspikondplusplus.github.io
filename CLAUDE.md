@@ -12,37 +12,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 bundle install                                # ruby gems
-bundle exec jekyll serve                      # dev server → http://localhost:4000/al-folio/  (NOTE baseurl)
-bundle exec jekyll build --baseurl /al-folio  # production-style build to _site/
-bash test/integration_distill.sh              # run ONE integration test (any of the seven in test/)
-npm run test:visual:update                    # refresh playwright snapshots after intentional UI change
+bundle exec jekyll serve                      # dev server → http://localhost:4000/  (baseurl is blank here)
+bundle exec jekyll build                      # production-style build to _site/
 bundle exec al-folio upgrade apply --safe     # deterministic codemods (font-weight-* → font-*, remote→local URLs)
 bundle exec al-folio upgrade overrides diff <path>    # then `overrides accept <path>` to acknowledge an override
 ```
 
+The site is a single about page ([`_pages/about.md`](_pages/about.md), served at `/`) plus a 404 page. Re-enabling a feature that was stripped out (blog, publications, projects, CV, search, comments, …) means adding its gem back to **both** the `Gemfile` and the `plugins:` list in `_config.yml`, restoring the relevant config block, and adding the content collection — see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
 ## Optional toolchains
 
-- **Jupyter posts.** `bin/setup-python-deps` installs _only_ `jupyter` and `nbconvert` (via `pip --user --break-system-packages`) for `jekyll-jupyter-notebook`. It does **not** read `requirements.txt`. Missing `jupyter-nbconvert` is warn-and-continue; notebook rendering is skipped.
-- **Everything else Python.** [`requirements.txt`](requirements.txt) is the fuller list and must be installed separately (`python3 -m pip install -r requirements.txt`): `rendercv[full]` for CV rendering, `scholarly` for `bin/update_scholar_citations.py`, plus `nbconvert` and `pyyaml`.
-- **Responsive images.** `imagemagick.enabled: true` needs ImageMagick `convert` on `PATH`.
+- **Responsive images.** `imagemagick.enabled: true` needs ImageMagick `convert` on `PATH`. Without it the build still succeeds; the `.webp` variants are just missing.
 - **Manual deploy.** `bin/deploy` is the manual `gh-pages` build + purgecss + force-push path; CI normally deploys. `purgecss` is not a devDependency — install it with `npm install -g purgecss`.
+- **No Python toolchain.** The Jupyter, RenderCV and Scholar-citation paths were removed along with their plugins, scripts and workflows.
 
 ## Docker serving model (v1-specific)
 
-`docker compose up -d` bind-mounts the repo to `/srv/jekyll` and runs `bin/entry_point.sh`, which serves with `--force_polling --destination /tmp/_site`. The build output deliberately goes to **container-local `/tmp/_site`, not the bind-mounted `_site`** — writing `_site` back across the host bind mount caused write deadlocks. The container also `inotifywait`s `_config.yml` and restarts Jekyll on change (config edits aren't hot-reloaded by `--watch`). Verify with the `/al-folio` baseurl: `curl -fsS http://127.0.0.1:8080/al-folio/`. `docker-compose-slim.yml` pulls a prebuilt `:slim` image instead of building locally.
+`docker compose up -d` bind-mounts the repo to `/srv/jekyll` and runs `bin/entry_point.sh`, which serves with `--force_polling --destination /tmp/_site`. The build output deliberately goes to **container-local `/tmp/_site`, not the bind-mounted `_site`** — writing `_site` back across the host bind mount caused write deadlocks. The container also `inotifywait`s `_config.yml` and restarts Jekyll on change (config edits aren't hot-reloaded by `--watch`). Verify with `curl -fsS http://127.0.0.1:8080/` (baseurl is blank on this site). `docker-compose-slim.yml` pulls a prebuilt `:slim` image instead of building locally.
 
-## CI gates and the style contract
+**`bin/entry_point.sh` runs `git restore Gemfile.lock` on every (re)start.** Uncommitted `Gemfile.lock` changes are silently discarded — commit them before `docker compose up`, or re-run `bundle install` inside the container afterwards.
 
-`npm run lint:style-contract` (`test/style_contract.js`) is the automated enforcement of the thin-starter boundary and will fail CI if you cross it. Beyond the forbidden paths listed in `AGENTS.md`, it also asserts that `_config.yml` keeps `theme: al_folio_core` and the required plugins, that the `third_party_libraries` SRI pins are present, and that the `al_math` Gemfile pin stays on a released version rather than a git branch.
+## CI gates
 
-Other gates:
+Three workflows remain; the starter's test suite and the maintainer automation (unit tests, visual regression, axe, link checkers, CodeQL, lighthouse, TOC/citation/screenshot bots, Docker image publishing) were deleted with the demo content.
 
-- `unit-tests.yml` — style contract plus all seven `test/integration_*.sh` scripts (`comments`, `plugin_toggles`, `distill`, `bootstrap_compat`, `upgrade_cli`, `css_minify`, `new_plugins`).
-- `visual-regression.yml` — Playwright on chromium + webkit, diffing the candidate build against a `v0.16.3` baseline worktree served on `:4100` via `BASELINE_URL`.
-- `upgrade-check.yml` — `bundle exec al-folio upgrade audit`.
+- `deploy.yml` — production build (`JEKYLL_ENV=production bundle exec jekyll build`, blank baseurl) plus purgecss, then pushes `_site` to `gh-pages`. This is the one that matters.
 - `prettier.yml` — Prettier with `@shopify/prettier-plugin-liquid` and `printWidth: 150`. Run `npm run lint:prettier` before pushing; `npx prettier . --write` fixes.
-- `update-tocs.yml` — regenerates `<!--ts-->…<!--te-->` blocks in changed root and `docs/` Markdown files. If you add or rename a heading, expect a follow-up auto-commit on `main`.
+- `upgrade-check.yml` — `bundle exec al-folio upgrade audit`, on changes to `_config.yml`, `_data/`, `_pages/`, `assets/`, or the `Gemfile`.
 
 ## Gem version pins
 
-`Gemfile` pins every `al-*` gem to an exact released version in `group :al_folio_plugins`, and `_config.yml` lists the same gems under `plugins:`. Read the current pins from the `Gemfile` rather than trusting any version quoted in prose — including here. To test a gem fix against this site, repoint the `Gemfile` at a sibling checkout (`path:`, `git:`, or `branch:`) and `bundle install`; see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md#working-on-a-gem-alongside-the-starter). Revert the pin before committing.
+`Gemfile` pins every `al-*` gem to an exact released version in `group :al_folio_plugins`, and `_config.yml` lists the same gems under `plugins:`. Only the gems this one-page site needs are still listed; note that gems in `group :jekyll_plugins` are auto-required by Bundler, so deactivating one of those means deleting it from the `Gemfile` too. `jekyll-scholar` is the exception that must stay: `al_folio_core`'s `page.liquid` and `post.liquid` reference `{% bibliography %}`, and Liquid parses untaken branches, so removing it breaks every page. Read the current pins from the `Gemfile` rather than trusting any version quoted in prose — including here. To test a gem fix against this site, repoint the `Gemfile` at a sibling checkout (`path:`, `git:`, or `branch:`) and `bundle install`; see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md#working-on-a-gem-alongside-the-starter). Revert the pin before committing.
