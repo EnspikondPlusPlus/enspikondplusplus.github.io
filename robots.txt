@@ -1,4 +1,4 @@
 User-agent: *
 Disallow:
 
-Sitemap: https://enspikondplusplus.github.io/al-folio/sitemap.xml
+Sitemap: https://enspikondplusplus.github.io/sitemap.xml
