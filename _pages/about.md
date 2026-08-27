@@ -15,6 +15,6 @@ profile:
 social: true # includes social icons at the bottom of the page
 ---
 
-I'm an undergraduate student in SCS at CMU, working on a Bachelor's degree in CS (and hopefully Robotics!).
+I'm an undergraduate student in SCS at CMU, working on a Bachelor's degree in CS and Robotics.
 
 I'm broadly interested in AI/ML and Robotics research, particularly with autonomous robotics, NLP, and mechatronics development.
