@@ -146,7 +146,6 @@
   color: var(--text-h);
 }
 
-/* Standalone tag sitting inline in a heading */
 .tag {
   display: inline-block;
   margin-left: 10px;
@@ -499,6 +498,12 @@
       color: var(--accent);
     }
   }
+}
+
+.navbar,
+.page,
+.footer {
+  padding-inline: calc(max(0px, (100% - 1126px) / 2) + 32px);
 }
 
 @media (max-width: 1024px) {

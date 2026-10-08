@@ -1,3 +1,8 @@
+import astroboticLogo from '../assets/astrobotic.jpg'
+import navtecaLogo from '../assets/navteca.jpg'
+import gsfcLogo from '../assets/gsfc.jpg'
+import ftcLogo from '../assets/ftc.jpg'
+
 export type Experience = {
   role: string
   organization: string
@@ -13,7 +18,7 @@ export const experiences: Experience[] = [
   {
     role: 'Perception Software Engineering Intern',
     organization: 'Astrobotic',
-    logo: 'src/assets/astrobotic.jpg',
+    logo: astroboticLogo,
     dates: 'Summer 2026',
     duration: '3 months',
     location: 'Pittsburgh, PA',
@@ -25,7 +30,7 @@ export const experiences: Experience[] = [
   {
     role: 'Educational Fellow',
     organization: 'Navteca',
-    logo: 'src/assets/navteca.jpg',
+    logo: navtecaLogo,
     dates: 'Summer 2026',
     duration: '4 months',
     location: 'Greenbelt, MD (Remote)',
@@ -37,7 +42,7 @@ export const experiences: Experience[] = [
   {
     role: 'Machine Learning and HPC Intern',
     organization: 'NASA Goddard Space Flight Center',
-    logo: 'src/assets/gsfc.jpg',
+    logo: gsfcLogo,
     dates: 'Summer 2025',
     duration: '3 months',
     location: 'Greenbelt, MD',
@@ -49,7 +54,7 @@ export const experiences: Experience[] = [
   {
     role: 'Software Developer and Mentor',
     organization: 'FIRST Tech Challenge (Equilibrium.exe)',
-    logo: 'src/assets/ftc.jpg',
+    logo: ftcLogo,
     dates: '2020 - 2025',
     duration: '5 years',
     location: 'Rockville, MD',
